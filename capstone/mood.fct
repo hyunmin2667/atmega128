@@ -1,0 +1,7 @@
+main DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"mood.c" LINE:40
+byte_out DSTACK_USAGE:3 DSTACK_LEVEL:3 FILE:"mood.c" LINE:179
+external_int0 DSTACK_USAGE:12 DSTACK_LEVEL:15 FILE:"mood.c" LINE:91
+time_display DSTACK_USAGE:0 DSTACK_LEVEL:15 FILE:"mood.c" LINE:190
+sprintf DSTACK_USAGE:16 DSTACK_LEVEL:31 FILE:"C:\cvavreval\lib\stdio.lib" LINE:1489
+_print DSTACK_USAGE:20 DSTACK_LEVEL:51 FILE:"C:\cvavreval\lib\stdio.lib" LINE:560
+strlen DSTACK_USAGE:2 DSTACK_LEVEL:53 FILE:"C:\cvavreval\lib\string.lib" LINE:1722

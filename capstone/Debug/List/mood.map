@@ -1,0 +1,45 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+sec                                                                               0x0522       1
+mSec                                                                              0x0523       1
+loc                                                                               0x0524       1
+buf                                                                               0x0525      20
+_seed (stdlib.lib)                                                                0x0539       4
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+EDITCURSOR                                                                        R5           1
+mood                                                                              R4           1
+duty1                                                                             R6,R7        2
+duty2                                                                             R8,R9        2
+duty3                                                                             R10,R11      2
+hour                                                                              R13          1
+_min                                                                              R12          1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+main                                                                              0x000B2     38
+timer1_compa_isr                                                                  0x000D8     39
+external_int0                                                                     0x000FF     33
+external_int1                                                                     0x00120     75
+external_int2                                                                     0x0016B     75
+external_int3                                                                     0x001B6      6
+byte_out                                                                          0x001BC     28
+time_display                                                                      0x001D8     24
+edit_cursor                                                                       0x001F0     44
+LCD_init                                                                          0x0021C     22
+LCD_String                                                                        0x00232     17
+Data                                                                              0x00248     15
+Busy                                                                              0x00257      4
+put_buff_G100                                                                     0x0025B     43
+_print_G100                                                                       0x00286    294
+sprintf                                                                           0x003AC     49
+strlen                                                                            0x003DD     12
+strlenf                                                                           0x003E9     13

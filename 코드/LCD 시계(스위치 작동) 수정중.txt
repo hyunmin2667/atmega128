@@ -1,0 +1,191 @@
+// 특정 문자열을 표시한 후 오른쪽으로 쉬프트한다. 
+// 주 의 : 포트를 직접 제어하여 LCD를 사용한다. 
+// RS - PA0 
+// R/W - PA1 
+// EN - PA2 
+
+// DB4 - PA4 
+// DB5 - PA5 
+// DB6 - PA6 
+// DB7 - PA7 
+
+#include <mega128.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <delay.h>
+
+#define FUNCSET 0x28 //Function Set 
+#define ENTMODE 0x06 // Entry Mode Set 
+#define ALLCLR 0x01 // All Clear 
+#define DISPON 0x0c // Display On 
+#define DISPOFF 0x08 // Display Off 
+#define LINE2 0xC0 // 2nd Line Move 
+#define HOME 0x02 // Cursor Home 
+#define RSHIFT 0x1C // Display Right Shift 
+     
+char hour=0, _min=0, sec=0, mSec=0, loc=0;
+char buf[20];
+
+void LCD_init(void); //LCD 초기화
+void LCD_String(char *); // 문자열 출력 함수 
+void Busy(void); 
+void Command(unsigned char); //인스트럭션 쓰기 함수 
+void Data(unsigned char); //데이터 쓰기 함수 
+void time_display(void);
+
+void main(void) 
+{ 
+        
+    DDRD = 0x00;
+    EIMSK = 0b00000101;        
+    EICRA = 0b00100010;
+    TCCR1B=0x0C; OCR1A=6249; TIMSK=0x10; //16000000/256/(1+6249)=10Hz=0.1sec // A매치
+    SREG = 0b10000000;  
+    
+    LCD_init();   
+    
+} 
+
+interrupt [TIM1_COMPA] void timer1_compa_isr(void)
+{
+    mSec++;
+    if(mSec> 9)
+    {
+        mSec=0; 
+        if(++sec >59)
+        {
+            sec=0;
+            if(++_min >59)
+            {
+                _min=0;
+                if(++hour>23) hour=0;
+            }
+        }
+    }     
+    time_display();
+    Command(LINE2); 
+    LCD_String("DSU ATmega128"); 
+}
+
+interrupt [EXT_INT0] void external_int0(void)
+{
+    if(loc == 0)
+    {    
+        Command(LINE2); 
+        LCD_String("Editting...      ");         
+    }      
+    TIMSK = 0b00000000; //시간 조절중에는 시계를 멈춤
+    loc++;
+    if(loc==7)
+    {
+        loc=0;
+        Command(ALLCLR);
+        time_display();
+        TIMSK=0x10;
+    }  
+}
+
+interrupt [EXT_INT2] void external_int2(void)
+{
+    if(TIMSK == 0b00000000)
+    {
+        if(loc == 1) sec++;
+        if(loc == 2) sec += 10;
+        if(loc == 3) _min++;
+        if(loc == 4) _min += 10;
+        if(loc == 5) hour++;
+        if(loc == 6) hour += 10;
+        if(sec > 59) sec = 0;
+        if(_min > 59) _min = 0;
+        if(hour > 24) hour = 0;
+        time_display();    
+    }
+}
+
+//시간 출력
+void time_display(void)
+{       
+    Command(HOME);           
+    sprintf(buf,"[TIME][%2d:%2d:%2d]", hour, _min, sec);               
+    LCD_String(buf);                      
+}
+
+// LCD 초기화 
+void LCD_init(void) 
+{ 
+    DDRA = 0xFF; // 포트 A 출력 설정  
+    PORTA &= 0xFB; // E = 0; 
+    delay_ms(15); 
+    Command(0x20); 
+    delay_ms(5); 
+    Command(0x20); 
+    delay_us(100); 
+    Command(0x20); 
+    Command(FUNCSET); 
+    Command(DISPON); 
+    Command(ALLCLR); 
+    Command(ENTMODE); 
+} 
+
+// 문자열 출력 함수 
+void LCD_String(char *str) 
+{ 
+    char *pStr=0; 
+    pStr = str; 
+    while(*pStr) Data(*pStr++); 
+} 
+
+// 인스트럭션 쓰기 함수 
+void Command(unsigned char byte) 
+{ 
+    Busy();     
+    
+    // 인스트럭션 상위 바이트 
+    PORTA = (byte & 0xF0); // 데이터 
+    PORTA &= 0xFE; //RS = 0; 
+    PORTA &= 0xFD; //RW = 0; 
+    delay_us(1); 
+    PORTA |= 0x04; //E = 1; 
+    delay_us(1); 
+    PORTA &= 0xFB; //E = 0; 
+    
+    // 인스트럭션 하위 바이트 
+    PORTA = ((byte<<4) & 0xF0); // 데이터 
+    PORTA &= 0xFE; //RS = 0; 
+    PORTA &= 0xFD; //RW = 0; 
+    delay_us(1); 
+    PORTA |= 0x04; //E = 1; 
+    delay_us(1); 
+    PORTA &= 0xFB; //E = 0; 
+} 
+
+//데이터 쓰기 함수 
+void Data(unsigned char byte) 
+{ 
+    Busy();  
+    
+    // 데이터 상위 바이트 
+    PORTA = (byte & 0xF0); // 데이터 
+    PORTA |= 0x01; //RS = 1; 
+    PORTA &= 0xFD; //RW = 0; 
+    delay_us(1); 
+    PORTA |= 0x04; //E = 1; 
+    delay_us(1); 
+    PORTA &= 0xFB; //E = 0; 
+    // 데이터 하위 바이트 
+    PORTA = ((byte<<4) & 0xF0); // 데이터 
+    PORTA |= 0x01; //RS = 1; 
+    PORTA &= 0xFD; //RW = 0; 
+    delay_us(1); 
+    PORTA |= 0x04; //E = 1;
+    delay_us(1); 
+    PORTA &= 0xFB; //E = 0; 
+} 
+
+// Busy Flag Check -> 일반적인 BF를 체크하는 것이 아니라 
+// 일정한 시간 지연을 이용한다. 
+void Busy(void) 
+{ 
+    delay_ms(2); 
+}

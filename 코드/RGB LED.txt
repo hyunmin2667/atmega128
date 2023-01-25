@@ -1,0 +1,36 @@
+#include <mega128.h>
+#include <delay.h>
+
+#define nop2 {#asm("nop"); #asm("nop");}
+#define nop8 {nop2; nop2; nop2; nop2;}
+#define ws2812b PORTB.2
+
+void byte_out(char d){
+
+    char i;
+    for(i=0;i<8;i++){
+        if(d&0x80){ ws2812b=1; nop8; ws2812b=0; }
+        else      { ws2812b=1; nop2; ws2812b=0; }
+        d<<=1;  // 비트연산자
+    }
+}
+
+void main(void){
+
+    char i;
+    //for문을 사용하여 LED 조정 가능(for문의 변수)
+    //int duty1;
+    //int duty2;
+    //int duty3;
+
+    DDRB.2=1;
+    
+     while(1){ 
+        for(i=0;i<8;i++){  //8개의 LED에 차례대로 값을 줌
+            byte_out(255); //G 
+            byte_out(0); //R
+            byte_out(0); //B
+        }       
+        delay_ms(5); // 차례대로 값을 원할하게 넣기 위해 딜레이를 줌 
+    }
+}
